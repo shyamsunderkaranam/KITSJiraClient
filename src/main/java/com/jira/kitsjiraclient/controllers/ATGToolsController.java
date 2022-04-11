@@ -1,7 +1,7 @@
 package com.jira.kitsjiraclient.controllers;
 
 import com.jira.kitsjiraclient.services.*;
-import com.atlassian.jira.util.json.JSONObject;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

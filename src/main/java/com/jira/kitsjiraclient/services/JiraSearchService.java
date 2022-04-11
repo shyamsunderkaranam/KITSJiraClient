@@ -24,7 +24,9 @@ import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.atlassian.jira.util.json.JSONObject;
+
+import org.joda.time.DateTimeZone;
+import org.json.simple.JSONObject;
 
 @Service
 public class JiraSearchService {
@@ -48,7 +50,7 @@ public class JiraSearchService {
 		List<JSONObject> finalResult = new ArrayList<>();
 		//String username="testatlassian1";
 		//String pwd="Test12345";
-		String pwd="fTmmRViWLVfEvgh0kUVRF604";
+		String pwd="K3DnHn970X94P4hBNZ3NCBA3";
 		String jql="project=\"FIRST\"";
 		try{
 			jiraServerUri = new URI(jiraUrl);
@@ -71,9 +73,11 @@ public class JiraSearchService {
 	            	pwd = allConfigs.get("dont_tell_anyone").toString();
 	                
 	            }
-	            if(allConfigs.get("jql")!=null) {
+	            if(allConfigs.get("jql2")!=null) {
 	                //logger.info("products Configures are "+allConfigs.get("SITBQUKProductsToFix"));
-	            	jql = allConfigs.get("jql").toString();
+	            	jql = allConfigs.get("jql2").toString();
+	            	//jql = jql.replace("doublequote", "\"");
+	            	System.out.println("JQL is: "+jql);
 	                
 	            }
 	        }
@@ -81,6 +85,7 @@ public class JiraSearchService {
 			JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
 			//client = factory.createWithBasicHttpAuthentication(jiraServerUri, username,pwd);
 			client = factory.create(jiraServerUri,auth );
+			
 			/*IssueRestClient issueClient = client.getIssueClient();
 			for (int i=0; i< 1004; i++) {
 			IssueInput newIssue = new IssueInputBuilder(
@@ -89,19 +94,26 @@ public class JiraSearchService {
 			}*/
 			SearchRestClient searchClient = client.getSearchClient();
 			
-			SearchResult result = searchClient.searchJql(jql).claim();
+			SearchResult result = searchClient.searchJql(jql, 2000, 0, null).claim();
+			//SearchResult result = searchClient.searchJql(jql).claim();
+			System.out.println("Max result: "+result.getMaxResults() + " And Total is "+result.getTotal());
+			
 			Iterable<Issue> results = result.getIssues();
+			
 			
 			for(Issue issue : results){
 				System.out.println(issue.getKey() +" : " +issue.getSummary());
 				resultOfQuery.put("key", issue.getKey());
 				resultOfQuery.put("summary", issue.getSummary());
-				resultOfQuery.put("creationDate", issue.getCreationDate());
-				resultOfQuery.put("status", issue.getStatus());
-				resultOfQuery.put("updated", issue.getUpdateDate());
-				resultOfQuery.put("resolved", issue.getFieldByName("Resolved").getValue()!=null?issue.getFieldByName("Resolved").getValue().toString():"9999-12-31T23:59:59.000+0530");
-				//resultOfQuery.put("ProjectTeam",issue.getFieldByName("Project Team").getValue()!=null?issue.getFieldByName("Project Team").getValue().toString():"Not provided");
-				//resultOfQuery.put("Tier",issue.getFieldByName("Tier").getValue().toString());
+				resultOfQuery.put("creationDate", issue.getCreationDate().toDateTime(DateTimeZone.forID("Europe/London")).toString().substring(0, 19).replace("T", " "));
+				
+				resultOfQuery.put("status", issue.getStatus().getStatusCategory().getKey());
+				resultOfQuery.put("updated", issue.getUpdateDate().toDateTime(DateTimeZone.forID("Europe/London")).toString().substring(0, 19).replace("T", " "));
+				String projectTeam = issue.getFieldByName("Project Team").getValue()!=null?issue.getFieldByName("Project Team").getValue().toString():"Not provided";
+				resultOfQuery.put("ProjectTeam",projectTeam);
+			    resultOfQuery.put("resolved", issue.getFieldByName("Resolved").getValue()!=null?issue.getFieldByName("Resolved").getValue().toString():"9999-12-31T23:59:59.000+0530");
+				String tier = issue.getFieldByName("Tier").getValue()!=null?issue.getFieldByName("Tier").getValue().toString():"Not provided";
+				resultOfQuery.put("Tier",tier);
 				finalResult.add(resultOfQuery);
 			}
 			

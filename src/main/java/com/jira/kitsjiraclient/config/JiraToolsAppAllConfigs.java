@@ -2,8 +2,7 @@ package com.jira.kitsjiraclient.config;
 
 import com.jira.kitsjiraclient.entities.ConfigEntity;
 import com.jira.kitsjiraclient.repository.ConfigRepo;
-import com.atlassian.jira.util.json.JSONException;
-import com.atlassian.jira.util.json.JSONObject;
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +36,7 @@ public class JiraToolsAppAllConfigs {
                         //JSONObject tmp = new JSONObject();
                     	try {
 							allConfigs.put(con.getConfigKey(), con.getConfigValue());
-						} catch (JSONException e) {
+						} catch (Exception e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
@@ -46,6 +45,7 @@ public class JiraToolsAppAllConfigs {
                     });
             //logger.info("All Configurations are: " + configs);
         }
+        System.out.println(allConfigs);
         return allConfigs;
     }
 
