@@ -1,0 +1,5 @@
+--CREATE TABLE JiraTools_config (
+--  id INT AUTO_INCREMENT  PRIMARY KEY,
+--  config_name VARCHAR(250) NOT NULL,
+--  config_value VARCHAR(1000) NOT NULL
+--);
