@@ -3,7 +3,6 @@ package com.jira.kitsjiraclient.services;
 
 
 import java.net.URI;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +10,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.jira.kitsjiraclient.config.JiraToolsAppAllConfigs;
+import com.jira.kitsjiraclient.config.ConfigDAO;
 import com.atlassian.httpclient.api.Request.Builder;
 import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.jira.rest.client.api.IssueRestClient;
@@ -32,7 +31,8 @@ import org.json.simple.JSONObject;
 public class JiraSearchService {
 	
 	@Autowired
-	JiraToolsAppAllConfigs jiraToolsAppAllConfigs;
+	ConfigDAO configdao;
+	private final String CONFIG_FILE_PATH="configs/configs.json";
 
 	public JiraSearchService() {
 		// TODO Auto-generated constructor stub
@@ -54,7 +54,7 @@ public class JiraSearchService {
 		String jql="project=\"FIRST\"";
 		try{
 			jiraServerUri = new URI(jiraUrl);
-			JSONObject allConfigs = jiraToolsAppAllConfigs.getAllConfigs();
+			JSONObject allConfigs = configdao.getJSONData(CONFIG_FILE_PATH);
 	        if(allConfigs != null){
 
 	            //logger.info("Found configurations");
@@ -68,14 +68,14 @@ public class JiraSearchService {
 	            	username = allConfigs.get("jira_user").toString();
 	                
 	            }
-	            if(allConfigs.get("dont_tell_anyone")!=null) {
+	            if(allConfigs.get("dont_tell")!=null) {
 	                //logger.info("products Configures are "+allConfigs.get("SITBQUKProductsToFix"));
-	            	pwd = allConfigs.get("dont_tell_anyone").toString();
+	            	pwd = allConfigs.get("dont_tell").toString();
 	                
 	            }
-	            if(allConfigs.get("jql2")!=null) {
+	            if(allConfigs.get("jqlForProjects")!=null) {
 	                //logger.info("products Configures are "+allConfigs.get("SITBQUKProductsToFix"));
-	            	jql = allConfigs.get("jql2").toString();
+	            	jql = allConfigs.get("jqlForProjects").toString();
 	            	//jql = jql.replace("doublequote", "\"");
 	            	System.out.println("JQL is: "+jql);
 	                
