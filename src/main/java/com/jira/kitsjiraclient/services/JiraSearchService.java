@@ -39,7 +39,7 @@ public class JiraSearchService {
 	}
 
 	//public static void main(String[] args) {
-	public List<JSONObject> businessmethod() {
+	public List<JSONObject> getProjectJqlData() {
 		// TODO Auto-generated method stub
 
 		URI jiraServerUri = null;

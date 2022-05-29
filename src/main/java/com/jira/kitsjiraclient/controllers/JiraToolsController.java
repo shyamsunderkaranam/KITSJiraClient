@@ -29,7 +29,7 @@ public class JiraToolsController {
 	@RequestMapping(value = {"/ticketsProjectWise"}, method = RequestMethod.GET)
 	public ResponseEntity<List<JSONObject>> getATGEnvAvailability() {
 		
-		List<JSONObject> tempList=  jiraSearchService.businessmethod();
+		List<JSONObject> tempList=  jiraSearchService.getProjectJqlData();
 		
 		return ResponseEntity.ok(tempList);
 	}
