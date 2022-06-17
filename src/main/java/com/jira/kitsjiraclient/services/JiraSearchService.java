@@ -81,7 +81,8 @@ public class JiraSearchService {
 	                
 	            }
 	        }
-			AuthenticationHandler auth = new BasicHttpAuthenticationHandler(username,pwd);
+			//AuthenticationHandler auth = new BasicHttpAuthenticationHandler(username,pwd);
+			BearerHttpAuthenticationHandler auth = new BearerHttpAuthenticationHandler(pwd);
 			JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
 			//client = factory.createWithBasicHttpAuthentication(jiraServerUri, username,pwd);
 			client = factory.create(jiraServerUri,auth );
@@ -126,7 +127,21 @@ public class JiraSearchService {
 		return finalResult;
 		}
 	}
-	
-	
+//https://community.atlassian.com/t5/Jira-questions/How-do-I-use-a-personal-access-token-PAT-in-jira-rest-java/qaq-p/1859167
 
+class BearerHttpAuthenticationHandler implements AuthenticationHandler {
+
+	private static final String AUTHORIZATION_HEADER = "Authorization";
+	private final String token;
+
+	public BearerHttpAuthenticationHandler(final String token) {
+	this.token = token;
+	}
+
+
+	@Override
+	public void configure(Builder builder) {
+		builder.setHeader(AUTHORIZATION_HEADER, "Bearer " + token);
+	}
+}
 
