@@ -1,0 +1,5 @@
+com/jira/kitsjiraclient/controllers/JiraToolsController.class
+com/jira/kitsjiraclient/config/ConfigDAO.class
+com/jira/kitsjiraclient/services/JiraSearchService.class
+com/jira/kitsjiraclient/KitsjiraclientApplication.class
+com/jira/kitsjiraclient/services/BearerHttpAuthenticationHandler.class

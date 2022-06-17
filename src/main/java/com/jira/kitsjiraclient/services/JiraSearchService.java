@@ -26,6 +26,8 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientF
 
 import org.joda.time.DateTimeZone;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class JiraSearchService {
@@ -33,6 +35,8 @@ public class JiraSearchService {
 	@Autowired
 	ConfigDAO configdao;
 	private final String CONFIG_FILE_PATH="configs/configs.json";
+
+	Logger logger = LoggerFactory.getLogger(JiraSearchService.class);
 
 	public JiraSearchService() {
 		// TODO Auto-generated constructor stub
@@ -55,6 +59,8 @@ public class JiraSearchService {
 		try{
 			jiraServerUri = new URI(jiraUrl);
 			JSONObject allConfigs = configdao.getJSONData(CONFIG_FILE_PATH);
+
+			logger.info("Fetching configuration details");
 	        if(allConfigs != null){
 
 	            //logger.info("Found configurations");
@@ -77,53 +83,88 @@ public class JiraSearchService {
 	                //logger.info("products Configures are "+allConfigs.get("SITBQUKProductsToFix"));
 	            	jql = allConfigs.get("jqlForProjects").toString();
 	            	//jql = jql.replace("doublequote", "\"");
-	            	System.out.println("JQL is: "+jql);
+	            	logger.info("JQL is: "+jql);
 	                
 	            }
 	        }
 			//AuthenticationHandler auth = new BasicHttpAuthenticationHandler(username,pwd);
-			BearerHttpAuthenticationHandler auth = new BearerHttpAuthenticationHandler(pwd);
-			JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-			//client = factory.createWithBasicHttpAuthentication(jiraServerUri, username,pwd);
-			client = factory.create(jiraServerUri,auth );
-			
+			logger.info("Connection to Jira");
+			try{
+				BearerHttpAuthenticationHandler auth = new BearerHttpAuthenticationHandler(pwd);
+				JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+				//client = factory.createWithBasicHttpAuthentication(jiraServerUri, username,pwd);
+				client = factory.create(jiraServerUri,auth );
+				logger.info("Client connection obtained");
+			}
+			catch(Exception e){
+				logger.error("Error connecting to Jira");
+				e.printStackTrace();
+			}
 			/*IssueRestClient issueClient = client.getIssueClient();
 			for (int i=0; i< 1004; i++) {
 			IssueInput newIssue = new IssueInputBuilder(
 				      "FIRST",(long)10001, "This is issue no "+i).build();
 			issueClient.createIssue(newIssue).claim();
 			}*/
-			SearchRestClient searchClient = client.getSearchClient();
-			
-			SearchResult result = searchClient.searchJql(jql, 2000, 0, null).claim();
-			//SearchResult result = searchClient.searchJql(jql).claim();
-			System.out.println("Max result: "+result.getMaxResults() + " And Total is "+result.getTotal());
-			
-			Iterable<Issue> results = result.getIssues();
-			
-			
-			for(Issue issue : results){
-				System.out.println(issue.getKey() +" : " +issue.getSummary());
-				resultOfQuery.put("key", issue.getKey());
-				resultOfQuery.put("summary", issue.getSummary());
-				resultOfQuery.put("creationDate", issue.getCreationDate().toDateTime(DateTimeZone.forID("Europe/London")).toString().substring(0, 19).replace("T", " "));
-				
-				resultOfQuery.put("status", issue.getStatus().getStatusCategory().getKey());
-				resultOfQuery.put("updated", issue.getUpdateDate().toDateTime(DateTimeZone.forID("Europe/London")).toString().substring(0, 19).replace("T", " "));
-				String projectTeam = issue.getFieldByName("Project Team").getValue()!=null?issue.getFieldByName("Project Team").getValue().toString():"Not provided";
-				resultOfQuery.put("ProjectTeam",projectTeam);
-			    resultOfQuery.put("resolved", issue.getFieldByName("Resolved").getValue()!=null?issue.getFieldByName("Resolved").getValue().toString():"9999-12-31T23:59:59.000+0530");
-				String tier = issue.getFieldByName("Tier").getValue()!=null?issue.getFieldByName("Tier").getValue().toString():"Not provided";
-				resultOfQuery.put("Tier",tier);
-				finalResult.add(resultOfQuery);
+			SearchRestClient searchClient = null;
+			try{
+				searchClient = client.getSearchClient();
+				logger.info("Search client obtained");
+			}
+			catch(Exception e){
+				logger.error("Error fetching jira search client");
+				e.printStackTrace();
 			}
 			
 			
+			SearchResult result=null;
+			try{
+				result = searchClient.searchJql(jql).claim();
+				//result = searchClient.searchJql(jql, 2000, 0, null).claim();
+				logger.info("Max result: "+result.getMaxResults() + " And Total is "+result.getTotal());
+			}
+
+			catch(Exception e){
+				logger.error("Error fetching jira data or executing JQL");
+				e.printStackTrace();
+			}
+			
+			
+			try{
+				
+				if(result != null){
+					logger.info("Mapping results");
+					Iterable<Issue> results = result.getIssues();
+					for(Issue issue : results){
+						System.out.println(issue.getKey() +" : " +issue.getSummary());
+						resultOfQuery.put("key", issue.getKey());
+						resultOfQuery.put("summary", issue.getSummary());
+						resultOfQuery.put("creationDate", issue.getCreationDate().toDateTime(DateTimeZone.forID("Europe/London")).toString().substring(0, 19).replace("T", " "));
+						
+						resultOfQuery.put("status", issue.getStatus().getStatusCategory().getKey());
+						resultOfQuery.put("updated", issue.getUpdateDate().toDateTime(DateTimeZone.forID("Europe/London")).toString().substring(0, 19).replace("T", " "));
+						String projectTeam = issue.getFieldByName("Project Team").getValue()!=null?issue.getFieldByName("Project Team").getValue().toString():"Not provided";
+						resultOfQuery.put("ProjectTeam",projectTeam);
+						resultOfQuery.put("resolved", issue.getFieldByName("Resolved").getValue()!=null?issue.getFieldByName("Resolved").getValue().toString():"9999-12-31T23:59:59.000+0530");
+						String tier = issue.getFieldByName("Tier").getValue()!=null?issue.getFieldByName("Tier").getValue().toString():"Not provided";
+						resultOfQuery.put("Tier",tier);
+						finalResult.add(resultOfQuery);
+					}
+				} else{
+
+					logger.error("Error in mapping Jira results as there are no results");
+
+				}
+			}
+			catch(Exception e){
+				logger.error("Error in mapping Jira results");
+				e.printStackTrace();
+			}
 			
 			//return result.getIssues();
-			}catch(Exception e) {
-				e.printStackTrace();
-				}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 		return finalResult;
 		}
 	}

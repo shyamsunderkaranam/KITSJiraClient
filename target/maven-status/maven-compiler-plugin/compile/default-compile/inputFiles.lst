@@ -1,0 +1,4 @@
+/workspace/KITSJiraClient/src/main/java/com/jira/kitsjiraclient/KitsjiraclientApplication.java
+/workspace/KITSJiraClient/src/main/java/com/jira/kitsjiraclient/services/JiraSearchService.java
+/workspace/KITSJiraClient/src/main/java/com/jira/kitsjiraclient/controllers/JiraToolsController.java
+/workspace/KITSJiraClient/src/main/java/com/jira/kitsjiraclient/config/ConfigDAO.java
